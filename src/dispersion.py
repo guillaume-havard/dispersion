@@ -130,32 +130,66 @@ def print_GUI(surface, msg, top_left, font):
     rect = msg_surface.get_rect()
     rect.topleft = top_left
     surface.blit(msg_surface, rect)       
+
+def mask_image(image, mask):
+    """
+    Mask an image with an other image. The resulting image will be a copy
+    of the inputed one for non black (0, 0, 0) pixels of the mask.
+    The two images must have the same size.
+    surface [in] : pygame.Surface image we want to mask
+    mask [in] : pygame.Surface mask all black (0, 0, 0) pixel will mask the
+    image
     
-if __name__ == "__main__":
-    print("coucou")
+    return : pygame.Surface result of the mask
+    """
+    if (image.get_width() != mask.get_width()) or\
+       (image.get_height() != mask.get_height()):        
+        raise ImagesSizeDoNotMatch()
     
-    marge_x = 180
-    marge_y = 30
+    im_res = image.copy()
+    im_res.fill((0, 0, 0))
+    
+    pix_image = pygame.PixelArray(image)
+    pix_mask = pygame.PixelArray(mask)
+    pix_res = pygame.PixelArray(im_res)
+        
+    for x in range(image.get_width()):
+        for y in range(image.get_height()):
+            if pix_mask[x][y] != 0:
+                pix_res[x][y] = pix_image[x][y]
+        
+    del pix_image
+    del pix_mask
+    del pix_res 
+    
+    return im_res
+    
+    
+if __name__ == "__main__":       
+    marge_x = 180 # max offset between the two pictures on the x axis
+    marge_y = 30 # max offset between the two pictures on the y axis
     off_x = 92
     off_y = -6
-    thresh = 30
+    thresh = 30  # max difference value to consider value alike.
+    help = False # does the help is activate
     
     pygame.init()
     FPS = 30 
     fpsClock = pygame.time.Clock()    
     DISPLAYSURF = pygame.display.set_mode((2*(640 + marge_x), 960))
     pygame.display.set_caption('Dispersion')
+    pygame.key.set_repeat(100, 20)
     
     font = pygame.font.Font("freesansbold.ttf", 32)
     
     WHITE = (255, 255, 255)
     BLACK = (0, 0, 0)
     
-    type_dispersion = "hue"       
+    type_dispersion = "grey"       
    
     if type_dispersion == "grey":
-        im_l = pygame.image.load('l_OE.bmp')
-        im_r = pygame.image.load('r_OE.bmp')
+        im_l = pygame.image.load('l.bmp')
+        im_r = pygame.image.load('r.bmp')
         im_l_hue = hue_image(im_l)
         im_r_hue = hue_image(im_r)
         pix_level = grey_level
@@ -178,20 +212,27 @@ if __name__ == "__main__":
                 pygame.quit()
                 sys.exit()
             elif event.type == KEYDOWN:
+                step = 1
+                mods = pygame.key.get_mods()
+                if mods & KMOD_SHIFT:
+                    step = 5
+                if mods & KMOD_CTRL:
+                    step = 10
+                
                 if event.key == K_RIGHT:
-                    off_x -= 1
+                    off_x -= step
                     if off_x < -marge_x:
                         off_x = -marge_x
                 elif event.key == K_LEFT:
-                    off_x += 1
+                    off_x += step
                     if off_x > marge_x:
                         off_x = marge_x
                 elif event.key == K_DOWN:
-                    off_y -= 1
+                    off_y -= step
                     if off_y < -marge_y:
                         off_y = -marge_y
                 elif event.key == K_UP:
-                    off_y += 1
+                    off_y += step
                     if off_y > marge_y:
                         off_y = marge_y
                 elif event.key == K_ESCAPE:
@@ -201,13 +242,30 @@ if __name__ == "__main__":
                                                    (off_x, off_y), thresh, 
                                                 pix_level)
                 elif event.key == K_s:
-                    pygame.image.save(im_result, "res_" + type_dispersion+"_"+
+                    pygame.image.save(im_result, "res_" + type_dispersion +
+                                                "_" + str(thresh) + "_" +
                                                 str(off_x) + "-" + str(off_y)
                                                  + ".bmp")  
-                                            
-                print("offset : ", off_x, off_y)
+                elif event.key == K_a:
+                    thresh -= step
+                    if thresh < 0:
+                        thresh = 0
+                elif event.key == K_z:
+                    thresh += step
+                    if thresh > 255:
+                        thresh = 255
+                elif event.key == K_h:
+                    help = not help  
+                    if help:
+                        im_r_hue.set_alpha(100)
+                    else:
+                        im_r_hue.set_alpha()                                          
+        
+        
                 
         DISPLAYSURF.blit(im_l_hue, (0, 0))
+        if help:
+            DISPLAYSURF.blit(im_l_hue, (640 + marge_x, marge_y))
         DISPLAYSURF.blit(im_r_hue, (640 + marge_x - off_x, marge_y - off_y))        
         DISPLAYSURF.blit(im_result, (0, 480 + 10))
         
@@ -225,9 +283,10 @@ if __name__ == "__main__":
         message = "offset : (" + str(off_x) + ", " + str(off_y) + ")" 
         print_GUI(DISPLAYSURF, message, (lim_print_x, lim_print_y + 50), font)
         message = "type dispersion : " + type_dispersion + \
-                  "   seuil : " + str(thresh)
+                  "   seuil(a/z) : " + str(thresh)
         print_GUI(DISPLAYSURF, message, (lim_print_x, lim_print_y + 80), font)
-        message = "visualisation supersposition : (pas encore fait)"
+        message = "visualisation supersposition(h) : " + \
+                  ("active" if help else "non active")
         print_GUI(DISPLAYSURF, message, (lim_print_x, lim_print_y + 110), font)
         
         pygame.display.update()
