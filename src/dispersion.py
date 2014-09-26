@@ -39,7 +39,7 @@ def hue_level(pix):
     
     return hls[0] * 255
     
-def level_to_color(grey_level, lum=0.5, sat=0.75):
+def level_to_color(level, norm = 255, shiftp = 0.0, lum=0.5, sat=0.75):
     """
     Convert a grey level to an rgb color. the conversion is cyclique so the 
     color for 255 is near the color for 0.
@@ -48,8 +48,11 @@ def level_to_color(grey_level, lum=0.5, sat=0.75):
     sat [in] : [0.0, 1.0] saturation for the color
     
     return : pygame.Color
-    """  
-    c = colorsys.hls_to_rgb(grey_level/255, .5, .7)    
+    """      
+    level_compressed = level * (1-shiftp)    
+    value = shiftp + level_compressed/norm
+    
+    c = colorsys.hls_to_rgb(value, lum, sat)    
     return (int(c[0]*255), int(c[1]*255), int(c[2]*255))
     
 def hue_image(surface):
@@ -72,7 +75,7 @@ def hue_image(surface):
     
     return res
     
-def compute_dispertion(im_l, im_r, offset, threshold, pix_level):
+def compute_dispersion_level(im_l, im_r, offset, threshold, pix_level):
     """
     Compute the dispertion image of two images. The image can be shift by
     an offset.
@@ -117,6 +120,222 @@ def compute_dispertion(im_l, im_r, offset, threshold, pix_level):
     del pix_disp
 
     return im_disp
+
+def image_to_levels(image, pix_level):
+    
+    pixels = pygame.PixelArray(image)
+    levels = []
+    
+    for x in range(image.get_width()):
+        levels.append([])        
+        for y in range(image.get_height()):
+            levels[x].append(pix_level(pixels[x][y]) )
+            
+    return levels
+
+def dispertion_rank(levels, windows):
+    """
+    Compute the dispertion image of two images. The image can be shift by
+    an offset.
+    
+    im_l [in] : pygame.Surface left image
+    im_r [in] : pygame.Surface right image
+    offset [in] : set with x and y offset for dispersion computation
+    windows [in] : windows for the computation
+
+    return : image de rank #pygame.Surface dispersion image  
+    """    
+    rank = []    
+    # filtre sur le rang.
+    # faire les comparaison avec :  "a < x < b"
+    for x in range(len(levels)):
+        rank.append([])  
+        for y in range(len(levels[x])):
+            rank[x].append(0)
+            
+            if x < (windows[0]//2) or x >= (len(levels) - (windows[0]//2) - 1):
+                continue
+            if y < (windows[1]//2) or y >= (len(levels[x]) - (windows[1]//2) - 1):
+                continue
+            
+            for i in range(windows[0]):
+                for j in range(windows[1]):
+                    if i == windows[0]//2 and j == windows[1]//2:
+                        continue
+                    if levels[x][y] < levels[x - windows[0]//2 + i]\
+                                            [y - windows[1]//2 + j]:
+                        rank[x][y] = rank[x][y] + 1
+                 
+    return rank
+                    
+def SAD(levels1, levels2, windows, offset):
+    """
+    
+    return levels
+    """
+    #tests listes de memes tailles
+        
+    lvl_res = []
+    
+    for x in range(len(levels1)):
+        lvl_res.append([])
+        for y in range(len(levels1[0])):
+            lvl_res[x].append(0)
+                        
+            xd = x + offset[0]
+            if not 0 <= xd < len(levels2):
+                continue
+            yd = y + offset[1]
+            if not 0 <= yd < len(levels2):
+                continue   
+            
+            # Verification si dans les deux images
+            if  not (windows[0]//2) <= x <= len(levels1) - (windows[0]//2) - 1:
+                continue        
+            if  not (windows[0]//2) <= xd <= len(levels1) - (windows[0]//2) - 1:
+                continue
+            if  not (windows[1]//2) <= y <= len(levels2[x]) - (windows[1]//2) - 1:
+                continue        
+            if  not (windows[1]//2) <= yd <= len(levels2[xd]) - (windows[1]//2) - 1:
+                continue 
+            
+            somme = 0
+            for i in range(windows[0]):
+                for j in range(windows[1]):
+                    if i == windows[0]//2 and j == windows[1]//2:
+                        continue
+                    somme += abs(levels1[x - windows[0]//2 + i]
+                                        [y - windows[1]//2 + j] - 
+                                 levels2[xd - windows[0]//2 + i]
+                                        [yd - windows[1]//2 + j])
+                    
+            lvl_res[x][y] = somme
+    
+    return lvl_res
+
+def dispertion_census(levels, windows):
+    """
+    Compute the dispertion image of two images. The image can be shift by
+    an offset.
+    
+    im_l [in] : pygame.Surface left image
+    im_r [in] : pygame.Surface right image
+    offset [in] : set with x and y offset for dispersion computation
+    windows [in] : windows for the computation
+
+    return : image de rank #pygame.Surface dispersion image  
+    """    
+    rank = []    
+    # filtre sur le rang.
+    # faire les comparaison avec :  "a < x < b"
+    for x in range(len(levels)):
+        rank.append([])  
+        for y in range(len(levels[x])):
+            rank[x].append([])
+            
+            if x < (windows[0]//2) or x >= (len(levels) - (windows[0]//2) - 1):
+                continue
+            if y < (windows[1]//2) or y >= (len(levels[x]) - (windows[1]//2) - 1):
+                continue
+            
+            for i in range(windows[0]):
+                for j in range(windows[1]):
+                    if i == windows[0]//2 and j == windows[1]//2:
+                        continue
+                    if levels[x][y] < levels[x - windows[0]//2 + i]\
+                                            [y - windows[1]//2 + j]:
+                        rank[x][y].append(1)
+                    else:
+                        rank[x][y].append(0)
+                 
+    return rank
+
+def hamming_distance(levels1, levels2, offset):
+    """
+    
+    return levels
+    """
+    #tests listes de memes tailles
+        
+        
+    lvl_res = []
+    
+    for x in range(len(levels1)):
+        lvl_res.append([])
+        for y in range(len(levels1[0])):
+            lvl_res[x].append(0)
+                        
+            xd = x + offset[0]
+            if not 0 <= xd < len(levels2):
+                continue
+            yd = y + offset[1]
+            if not 0 <= yd < len(levels2):
+                continue   
+                      
+            somme = 0
+            if len(levels1[x][y]) != 0 and len(levels2[xd][yd]) != 0:                
+                for index in range(len(levels1[x][y])):
+                    if levels1[x][y][index] != levels2[xd][yd][index]:
+                        somme += 1
+                    
+              
+            lvl_res[x][y] = somme
+    
+    return lvl_res
+                        
+def levels_to_image(levels):
+    """
+    """
+    
+    """
+    print(type(levels))
+    #print(levels)
+    print(len(levels))
+    print(type(levels[0]))
+    print(levels[0])
+    print(len(levels[0]))
+    """
+    
+    
+    maximum = 0
+    for level in levels:        
+        if maximum < max(level):
+            maximum = max(level)    
+            
+    print("maximum pour normalisation :", maximum)
+    
+    im_res = pygame.Surface((len(levels), len(levels[0])))
+    im_res.fill((0, 0, 0))
+    
+    pix_res = pygame.PixelArray(im_res)
+    
+    for x in range(im_res.get_width()):
+        for y in range(im_res.get_height()):
+            if levels[x][y] != 0:
+                pix_res[x][y] = level_to_color(levels[x][y], maximum, 0.35)
+    
+    del pix_res
+    
+    return im_res
+
+
+def echelle(shift_p):
+    """
+    taille 200*20
+    """    
+    width = 200
+    height = 20
+    echelle = pygame.Surface((width, height))
+    echelle.fill((255, 255, 255))
+    pix_echelle = pygame.PixelArray(echelle)
+    
+    for x in range(width):
+        for y in range(height):
+            pix_echelle[x][y] = level_to_color(x, width, shift_p)
+    
+    del pix_echelle
+    
+    return echelle
 
 def print_GUI(surface, msg, top_left, font):
     """
@@ -163,4 +382,12 @@ def mask_image(image, mask):
     del pix_res 
     
     return im_res
+
+
+
+
+
+
+
+
 
