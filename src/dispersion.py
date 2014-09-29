@@ -122,6 +122,17 @@ def compute_dispersion_level(im_l, im_r, offset, threshold, pix_level):
     return im_disp
 
 def image_to_levels(image, pix_level):
+    """
+    Will convert an image to a 2D list of level computed by an input function.
+    
+    image [in]: pygame.Surface
+    pix_level: function taking a pixelArray (3 bytes) and compute a [0, 255]
+               level
+               
+    return: 2D list (same size than the image) with levelfor each "pixel".
+    """
+    
+    #test pour l'image
     
     pixels = pygame.PixelArray(image)
     levels = []
@@ -135,15 +146,7 @@ def image_to_levels(image, pix_level):
 
 def dispertion_rank(levels, windows):
     """
-    Compute the dispertion image of two images. The image can be shift by
-    an offset.
-    
-    im_l [in] : pygame.Surface left image
-    im_r [in] : pygame.Surface right image
-    offset [in] : set with x and y offset for dispersion computation
-    windows [in] : windows for the computation
-
-    return : image de rank #pygame.Surface dispersion image  
+      
     """    
     rank = []    
     # filtre sur le rang.

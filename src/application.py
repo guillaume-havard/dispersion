@@ -76,7 +76,7 @@ if __name__ == "__main__":
     off_x = 0 # offset between the two pictures
     off_y = 0 # offset between the two pictures
     thresh = 30  # max difference value to consider value alike.
-    help = False # does the help is activate
+    help = False # is the help activated ?
     windows = [3, 3] # windows used with some algorithms
     
     pygame.init()
@@ -96,12 +96,14 @@ if __name__ == "__main__":
     im_l = pygame.image.load('l.bmp')
     im_r = pygame.image.load('r.bmp')
     im_l_OE = pygame.image.load('l_OE.bmp')
-    im_r_OE = pygame.image.load('r_OE.bmp')
+    im_r_OE = pygame.image.load('r_OE.bmp')    
     
     type_algorithme = "none"
     type_affichage = "hue"
     im_l_aff = im_l
     im_r_aff = im_r    
+    im_l_comp = im_l
+    im_r_comp = im_r    
     
     im_result = im_l.copy()
     im_result.fill(BLACK)
@@ -139,47 +141,68 @@ if __name__ == "__main__":
                     off_y += step
                     if off_y > marge_y:
                         off_y = marge_y
+                elif event.key == K_o:
+                    off_x = 0
+                    off_y = 0
                 elif event.key == K_ESCAPE:
                     pygame.event.post(pygame.event.Event(QUIT))
                     
                 elif event.key == K_a:
                     if type_affichage == "hue":
-                        type_affichage = "grey"
+                        type_affichage = "OE"
                         im_l_aff = hue_image(im_l_OE)
                         im_r_aff = hue_image(im_r_OE)
-                    elif type_affichage == "grey": 
+                        im_l_comp = im_l_OE
+                        im_r_comp = im_r_OE
+                        if help:
+                            im_r_aff.set_alpha(100)
+                    elif type_affichage == "OE": 
                         type_affichage = "hue"  
                         im_l_aff = im_l
                         im_r_aff = im_r
-    
+                        im_l_comp = im_l
+                        im_r_comp = im_r
+                        if help:                        
+                            im_r_aff.set_alpha(100)    
         
                 elif event.key == K_f:
                     type_algorithme = "simple"
                     if type_affichage == "hue":
-                        im_result = compute_dispersion_level(im_l, im_r, 
+                        im_result = compute_dispersion_level(im_l_comp, im_r_comp, 
                                                         (off_x, off_y), thresh, 
                                                         hue_level)   
-                    elif type_affichage == "grey":
-                        im_result = compute_dispersion_level(im_l_OE, im_r_OE, 
+                    elif type_affichage == "OE":
+                        im_result = compute_dispersion_level(im_l_comp, im_r_comp, 
                                                         (off_x, off_y), thresh, 
                                                         grey_level)                
                 elif event.key == K_d:  
                     type_algorithme = "sad" 
-                    im_result = algo_SAD(im_l, im_r, grey_levell, (off_x, off_y), windows)
+                    im_result = algo_SAD(im_l_comp, im_r_comp, grey_level, 
+                                         (off_x, off_y), windows)
                     im_echelle = echelle(0.35)
                 elif event.key == K_r:  
                     type_algorithme = "rank" 
-                    im_result = algo_rank_SAD(im_l, im_r, grey_level, (off_x, off_y), windows)
+                    im_result = algo_rank_SAD(im_l_comp, im_r_comp, grey_level,
+                                              (off_x, off_y), windows)
                     im_echelle = echelle(0.35)
                 elif event.key == K_c:   
                     type_algorithme = "census"
-                    im_result = algo_census_hamming(im_l, im_r, grey_level, (off_x, off_y), windows)
+                    im_result = algo_census_hamming(im_l_comp, im_r_comp, 
+                                          grey_level, (off_x, off_y), windows)
                     im_echelle = echelle(0.35)
+                
+                #sauvegarde de l'echelle    
+                elif event.key == K_e:                       
+                    im_echelle = echelle(0.35)
+                    pygame.image.save(im_echelle, "echelle_ratio.bmp")  
                     
                 elif event.key == K_s:
-                    message = type_algorithme + "_"
+                    message = type_algorithme + "_" + type_affichage + "_"
                     if type_algorithme == "simple":
-                        message += type_affichage + "_" + str(thresh) + "_" 
+                        message += str(thresh) + "_" 
+                    else:
+                        message += "w" + str(windows[0]) + "-" + \
+                                   str(windows[1]) + "_"
                     message += str(off_x) + "-" + str(off_y) + ".bmp"
                     
                     pygame.image.save(im_result, message)  
@@ -231,14 +254,14 @@ if __name__ == "__main__":
         lim_print_x = 640 + marge_print
         message = "Dispersion"
         print_GUI(DISPLAYSURF, message, (lim_print_x, lim_print_y), font)
-        message = "offset : (" + str(off_x) + ", " + str(off_y) + ")" 
+        message = "offset(o: reset) : (" + str(off_x) + ", " + str(off_y) + ")" 
         print_GUI(DISPLAYSURF, message, (lim_print_x, lim_print_y + 50), font)
         message = "windows(w/x) : (" + str(windows[0]) + ", " + str(windows[1]) + ")" 
         print_GUI(DISPLAYSURF, message, (lim_print_x + 400, lim_print_y + 50), font)
         message = "type affichage(a) : " + type_affichage + \
                   "   seuil(t/y) : " + str(thresh)
         print_GUI(DISPLAYSURF, message, (lim_print_x, lim_print_y + 80), font)
-        message = "visualisation supersposition(h) : " + \
+        message = "visualisation superposition(h) : " + \
                   ("active" if help else "non active")
         print_GUI(DISPLAYSURF, message, (lim_print_x, lim_print_y + 110), font)
         message = "DISP SIMPLE (F) SAD (D)  RANK (R)  CENSUS (C)"
