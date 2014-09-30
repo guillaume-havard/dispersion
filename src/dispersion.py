@@ -269,8 +269,9 @@ def dispertion_census(levels, windows):
                  
     return rank
 
-def hamming_distance(levels1, levels2, offset):
+def hamming_distance(levels1, levels2, disp_range, offset):
     """
+    sans windows
     
     return levels
     """
@@ -284,21 +285,30 @@ def hamming_distance(levels1, levels2, offset):
         for y in range(len(levels1[0])):
             lvl_res[x].append(0)
                         
+            
+            
             xd = x + offset[0]
-            if not 0 <= xd < len(levels2):
+            if not disp_range[1] <= xd < len(levels2):
                 continue
             yd = y + offset[1]
             if not 0 <= yd < len(levels2):
                 continue   
-                      
-            somme = 0
-            if len(levels1[x][y]) != 0 and len(levels2[xd][yd]) != 0:                
-                for index in range(len(levels1[x][y])):
-                    if levels1[x][y][index] != levels2[xd][yd][index]:
-                        somme += 1
+            
+            prev_somme = 65532
+            best_disp = 0;
+            for disp in range(disp_range[0], disp_range[1] + 1):                                                  
+                somme = 0
+                if len(levels1[x][y]) != 0 and len(levels2[xd-disp][yd]) != 0:                
+                    for index in range(len(levels1[x][y])):
+                        if levels1[x][y][index] != levels2[xd-disp][yd][index]:
+                            somme += 1
+                
+                if somme < prev_somme:
+                    prev_somme = somme
+                    best_disp = disp
                     
               
-            lvl_res[x][y] = somme
+            lvl_res[x][y] = best_disp
     
     return lvl_res
                         
