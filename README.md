@@ -4,7 +4,11 @@ dispersion
 Test de génération d'image de profondeur à partir de deux images 
 stéréoscopiques
 
-
+Méthodes testées :  
+* Comparaison simple
+* SDA
+* Rank
+* Census
 
 Lecture
 -------
