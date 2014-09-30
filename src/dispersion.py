@@ -156,65 +156,81 @@ def dispertion_rank(levels, windows):
         for y in range(len(levels[x])):
             rank[x].append(0)
             
-            if x < (windows[0]//2) or x >= (len(levels) - (windows[0]//2) - 1):
+            if x < (windows//2) or x >= (len(levels) - (windows//2) - 1):
                 continue
-            if y < (windows[1]//2) or y >= (len(levels[x]) - (windows[1]//2) - 1):
+            if y < (windows//2) or y >= (len(levels[x]) - (windows//2) - 1):
                 continue
             
-            for i in range(windows[0]):
-                for j in range(windows[1]):
-                    if i == windows[0]//2 and j == windows[1]//2:
+            for i in range(windows):
+                for j in range(windows):
+                    if i == windows//2 and j == windows//2:
                         continue
-                    if levels[x][y] < levels[x - windows[0]//2 + i]\
-                                            [y - windows[1]//2 + j]:
+                    if levels[x][y] < levels[x - windows//2 + i]\
+                                            [y - windows//2 + j]:
                         rank[x][y] = rank[x][y] + 1
                  
     return rank
                     
-def SAD(levels1, levels2, windows, offset):
+def SAD(levels1, levels2, windows, disp_range, offset):
     """
     
     return levels
     """
     #tests listes de memes tailles
-        
+    hist = {}
+    tot = 0   
     lvl_res = []
+    
+    win = windows//2
     
     for x in range(len(levels1)):
         lvl_res.append([])
         for y in range(len(levels1[0])):
-            lvl_res[x].append(0)
-                        
-            xd = x + offset[0]
-            if not 0 <= xd < len(levels2):
+            lvl_res[x].append(0)            
+            if not win + disp_range[1] <= x < len(levels1) - win:
                 continue
-            yd = y + offset[1]
-            if not 0 <= yd < len(levels2):
-                continue   
-            
-            # Verification si dans les deux images
-            if  not (windows[0]//2) <= x <= len(levels1) - (windows[0]//2) - 1:
-                continue        
-            if  not (windows[0]//2) <= xd <= len(levels1) - (windows[0]//2) - 1:
-                continue
-            if  not (windows[1]//2) <= y <= len(levels2[x]) - (windows[1]//2) - 1:
-                continue        
-            if  not (windows[1]//2) <= yd <= len(levels2[xd]) - (windows[1]//2) - 1:
+            if not win <= y < len(levels1[0]) - win:
+                continue                                
+            xd = x + offset[0]           
+            yd = y + offset[1]            
+            # Verification si dans les deux images                    
+            if  not win + disp_range[1] <= xd < len(levels2) - win:
+                continue       
+            if  not win <= yd < len(levels2[0]) - win:
                 continue 
             
-            somme = 0
-            for i in range(windows[0]):
-                for j in range(windows[1]):
-                    if i == windows[0]//2 and j == windows[1]//2:
-                        continue
-                    somme += abs(levels1[x - windows[0]//2 + i]
-                                        [y - windows[1]//2 + j] - 
-                                 levels2[xd - windows[0]//2 + i]
-                                        [yd - windows[1]//2 + j])
-                    
-            lvl_res[x][y] = somme
-    
+            best_disp = disp_range[0]
+            prev_somme = 65532
+            for disp in range(disp_range[0], disp_range[1]+1):                             
+                somme = 0
+                for i in range(-win, win + 1):
+                    for j in range(-win, win + 1):                        
+                        #if x-win+disp <= 0 or xd-win+disp <= 0:
+                            #continue
+                        somme += abs(levels1[x + i]
+                                            [y + j] - 
+                                     levels2[xd + i - disp]
+                                            [yd + j])
+                
+                if somme < prev_somme:
+                    prev_somme = somme
+                    best_disp = disp
+            lvl_res[x][y] = best_disp
+               
     return lvl_res
+
+def histo_2D(levels):
+    
+    hist = {}
+
+    for x in range(len(levels)):
+        for y in range(len(levels[0])):
+            if levels[x][y] not in hist:
+                hist[levels[x][y]] = 1
+            else:
+                hist[levels[x][y]] += 1
+                
+    return hist
 
 def dispertion_census(levels, windows):
     """
@@ -236,17 +252,17 @@ def dispertion_census(levels, windows):
         for y in range(len(levels[x])):
             rank[x].append([])
             
-            if x < (windows[0]//2) or x >= (len(levels) - (windows[0]//2) - 1):
+            if x < (windows//2) or x >= (len(levels) - (windows//2) - 1):
                 continue
-            if y < (windows[1]//2) or y >= (len(levels[x]) - (windows[1]//2) - 1):
+            if y < (windows//2) or y >= (len(levels[x]) - (windows//2) - 1):
                 continue
             
-            for i in range(windows[0]):
-                for j in range(windows[1]):
-                    if i == windows[0]//2 and j == windows[1]//2:
+            for i in range(windows):
+                for j in range(windows):
+                    if i == windows//2 and j == windows//2:
                         continue
-                    if levels[x][y] < levels[x - windows[0]//2 + i]\
-                                            [y - windows[1]//2 + j]:
+                    if levels[x][y] < levels[x - windows//2 + i]\
+                                            [y - windows//2 + j]:
                         rank[x][y].append(1)
                     else:
                         rank[x][y].append(0)

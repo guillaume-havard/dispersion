@@ -13,17 +13,21 @@ from dispersion import *
 def algo_SAD(im_l, im_r, pix_level, offset, windows):
     print("level l...", end="")
     levels_l = image_to_levels(im_l, pix_level)  
-    print("ok") 
+    print("ok")    
     print("level r...", end="")                 
     levels_r = image_to_levels(im_r, pix_level)
     print("ok")
     print("SAD...", end="")
-    sad = SAD(levels_l, levels_r, (3, 3), offset)    
+    sad = SAD(levels_l, levels_r, windows, (0, 16), offset)    
     print("ok") 
     print("generation image...", end="")
     im_result = levels_to_image(sad)
     print("ok")
-    
+    """
+    histo = histo_2D(sad)
+    for key in iter(histo):
+        print("{} : {}".format(key, histo[key]))
+    """
     return im_result
      
 def algo_rank_SAD(im_l, im_r, pix_level, offset, windows):
@@ -77,7 +81,7 @@ if __name__ == "__main__":
     off_y = 0 # offset between the two pictures
     thresh = 30  # max difference value to consider value alike.
     help = False # is the help activated ?
-    windows = [3, 3] # windows used with some algorithms
+    windows = 3 # windows used with some algorithms
     
     pygame.init()
     FPS = 30 
@@ -93,8 +97,12 @@ if __name__ == "__main__":
     
            
     
+    #im_l = pygame.image.load('tsukubaleft.jpg')
+    #im_r = pygame.image.load('tsukubaright.jpg')
     im_l = pygame.image.load('l.bmp')
     im_r = pygame.image.load('r.bmp')
+    #im_l = pygame.image.load('r_t.png')
+    #im_r = pygame.image.load('l_t.png')
     im_l_OE = pygame.image.load('l_OE.bmp')
     im_r_OE = pygame.image.load('r_OE.bmp')    
     
@@ -191,24 +199,24 @@ if __name__ == "__main__":
                                           grey_level, (off_x, off_y), windows)
                     im_echelle = echelle(0.35)
                 
-                #sauvegarde de l'echelle    
+                # Sauvegarde de l'echelle    
                 elif event.key == K_e:                       
                     im_echelle = echelle(0.35)
                     pygame.image.save(im_echelle, "echelle_ratio.bmp")  
-                    
+                # Sauvegarde de l'image calcculee    
                 elif event.key == K_s:
                     message = type_algorithme + "_" + type_affichage + "_"
                     if type_algorithme == "simple":
                         message += str(thresh) + "_" 
                     else:
-                        message += "w" + str(windows[0]) + "-" + \
-                                   str(windows[1]) + "_"
+                        message += "w" + str(windows) + "-" + \
+                                   str(windows) + "_"
                     message += str(off_x) + "-" + str(off_y) + ".bmp"
                     
                     pygame.image.save(im_result, message)  
                     #pygame.image.save(im_echelle, "echelle.bmp")
                     
-                # threshold difference
+                # Threshold difference
                 elif event.key == K_t:
                     thresh -= step
                     if thresh < 0:
@@ -226,13 +234,13 @@ if __name__ == "__main__":
                         im_r_aff.set_alpha()
                 # Windows
                 elif event.key == K_w:   
-                    windows = [windows[0] - 2, windows[0] - 2]
-                    if windows[0] < 1:
-                        windows = [1, 1]
+                    windows = windows - 2
+                    if windows < 1:
+                        windows = 1
                 elif event.key == K_x:   
-                    windows = [windows[0] + 2, windows[0] + 2]
-                    if windows[0] > 29:
-                        windows = [29, 29]
+                    windows = windows + 2
+                    if windows > 29:
+                        windows = 29
                 
         DISPLAYSURF.blit(im_l_aff, (0, 0))
         if help:
@@ -256,7 +264,7 @@ if __name__ == "__main__":
         print_GUI(DISPLAYSURF, message, (lim_print_x, lim_print_y), font)
         message = "offset(o: reset) : (" + str(off_x) + ", " + str(off_y) + ")" 
         print_GUI(DISPLAYSURF, message, (lim_print_x, lim_print_y + 50), font)
-        message = "windows(w/x) : (" + str(windows[0]) + ", " + str(windows[1]) + ")" 
+        message = "windows(w/x) : (" + str(windows) + ", " + str(windows) + ")" 
         print_GUI(DISPLAYSURF, message, (lim_print_x + 400, lim_print_y + 50), font)
         message = "type affichage(a) : " + type_affichage + \
                   "   seuil(t/y) : " + str(thresh)
