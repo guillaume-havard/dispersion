@@ -10,7 +10,7 @@ import colorsys
 
 from dispersion import *
  
-def algo_SAD(im_l, im_r, pix_level, offset, windows):
+def algo_SAD(im_l, im_r, pix_level, offset, window):
     print("level l...", end="")
     levels_l = image_to_levels(im_l, pix_level)  
     print("ok")    
@@ -18,10 +18,10 @@ def algo_SAD(im_l, im_r, pix_level, offset, windows):
     levels_r = image_to_levels(im_r, pix_level)
     print("ok")
     print("SAD...", end="")
-    sad = SAD(levels_l, levels_r, windows, (0, 16), offset)    
+    sad = SAD(levels_l, levels_r, window, (0, 16), offset)    
     print("ok") 
     print("generation image...", end="")
-    im_result = levels_to_image(sad)
+    im_result = levels_to_image(sad, level_to_color)
     print("ok")
     """
     histo = histo_2D(sad)
@@ -30,7 +30,7 @@ def algo_SAD(im_l, im_r, pix_level, offset, windows):
     """
     return im_result
      
-def algo_rank_SAD(im_l, im_r, pix_level, offset, windows):
+def algo_rank_SAD(im_l, im_r, pix_level, offset, window):
     print("level l...", end="")
     levels_l = image_to_levels(im_l, pix_level)  
     print("ok") 
@@ -38,21 +38,21 @@ def algo_rank_SAD(im_l, im_r, pix_level, offset, windows):
     levels_r = image_to_levels(im_r, pix_level)
     print("ok")
     print("rank l...", end="")
-    rank_l = dispertion_rank(levels_l, windows)
+    rank_l = dispertion_rank(levels_l, window)
     print("ok") 
     print("rank r...", end="")
-    rank_r = dispertion_rank(levels_r, windows) 
+    rank_r = dispertion_rank(levels_r, window) 
     print("ok")
     print("SAD...", end="")                   
-    sad = SAD(rank_l, rank_r, windows, (0, 16), offset)
+    sad = SAD(rank_l, rank_r, window, (0, 16), offset)
     print("ok") 
     print("generation image...", end="")
-    im_result = levels_to_image(sad)
+    im_result = levels_to_image(sad, level_to_color)
     print("ok")
     
     return im_result
 
-def algo_census_hamming(im_l, im_r, pix_level, offset, windows):
+def algo_census_hamming(im_l, im_r, pix_level, offset, window):
     print("level l...", end="")
     levels_l = image_to_levels(im_l, pix_level)  
     print("ok") 
@@ -60,16 +60,16 @@ def algo_census_hamming(im_l, im_r, pix_level, offset, windows):
     levels_r = image_to_levels(im_r, pix_level)
     print("ok")
     print("census l...", end="")
-    census_l = dispertion_census(levels_l, windows)
+    census_l = dispertion_census(levels_l, window)
     print("ok")         
     print("census r...", end="")
-    census_r = dispertion_census(levels_r, windows) 
+    census_r = dispertion_census(levels_r, window) 
     print("ok")
     print("hamming...", end="")                   
     hamming = hamming_distance(census_l, census_r, (0, 16), offset)
     print("ok") 
     print("generation image...", end="")
-    im_result = levels_to_image(hamming)
+    im_result = levels_to_image(hamming, level_to_color)
     print("ok")
     
     return im_result    
@@ -81,7 +81,7 @@ if __name__ == "__main__":
     off_y = 0 # offset between the two pictures
     thresh = 30  # max difference value to consider value alike.
     help = False # is the help activated ?
-    windows = 3 # windows used with some algorithms
+    window = 3 # window used with some algorithms
     
     pygame.init()
     FPS = 30 
@@ -98,21 +98,25 @@ if __name__ == "__main__":
            
     #im_l = pygame.image.load('stereogramleft.jpg')
     #im_r = pygame.image.load('stereogramright.jpg')
-    im_l = pygame.image.load('tsukubaleft.jpg')
-    im_r = pygame.image.load('tsukubaright.jpg')
-    #im_l = pygame.image.load('l.bmp')
-    #im_r = pygame.image.load('r.bmp')
+    #im_l = pygame.image.load('tsukubaleft.jpg')
+    #im_r = pygame.image.load('tsukubaright.jpg')
+    #im_l = pygame.image.load('scene1.row3.col3.ppm')
+    #im_r = pygame.image.load('scene1.row3.col4.ppm')
+    im_l = pygame.image.load('im2.ppm')
+    im_r = pygame.image.load('im6.ppm')
+    #im_l = pygame.image.load('l_150.bmp')
+    #im_r = pygame.image.load('r_150.bmp')
     #im_l = pygame.image.load('r_t.png')
     #im_r = pygame.image.load('l_t.png')
-    im_l_OE = pygame.image.load('l_OE.bmp')
-    im_r_OE = pygame.image.load('r_OE.bmp')    
+    im_l_OE = pygame.image.load('l_150_OE.bmp')
+    im_r_OE = pygame.image.load('r_150_OE.bmp')    
     
     type_algorithme = "none"
     type_affichage = "hue"
     im_l_aff = im_l
     im_r_aff = im_r    
     im_l_comp = im_l
-    im_r_comp = im_r    
+    im_r_comp = im_r     
     
     im_result = im_l.copy()
     im_result.fill(BLACK)
@@ -187,17 +191,17 @@ if __name__ == "__main__":
                 elif event.key == K_d:  
                     type_algorithme = "sad" 
                     im_result = algo_SAD(im_l_comp, im_r_comp, grey_level, 
-                                         (off_x, off_y), windows)
+                                         (off_x, off_y), window)
                     im_echelle = echelle(0.35)
                 elif event.key == K_r:  
                     type_algorithme = "rank" 
                     im_result = algo_rank_SAD(im_l_comp, im_r_comp, grey_level,
-                                              (off_x, off_y), windows)
+                                              (off_x, off_y), window)
                     im_echelle = echelle(0.35)
                 elif event.key == K_c:   
                     type_algorithme = "census"
                     im_result = algo_census_hamming(im_l_comp, im_r_comp, 
-                                          grey_level, (off_x, off_y), windows)
+                                          grey_level, (off_x, off_y), window)
                     im_echelle = echelle(0.35)
                 
                 # Sauvegarde de l'echelle    
@@ -210,8 +214,8 @@ if __name__ == "__main__":
                     if type_algorithme == "simple":
                         message += str(thresh) + "_" 
                     else:
-                        message += "w" + str(windows) + "-" + \
-                                   str(windows) + "_"
+                        message += "w" + str(window) + "-" + \
+                                   str(window) + "_"
                     message += str(off_x) + "-" + str(off_y) + ".bmp"
                     
                     pygame.image.save(im_result, message)  
@@ -233,15 +237,15 @@ if __name__ == "__main__":
                         im_r_aff.set_alpha(100)
                     else:
                         im_r_aff.set_alpha()
-                # Windows
+                # Window
                 elif event.key == K_w:   
-                    windows = windows - 2
-                    if windows < 1:
-                        windows = 1
+                    window = window - 2
+                    if window < 1:
+                        window = 1
                 elif event.key == K_x:   
-                    windows = windows + 2
-                    if windows > 29:
-                        windows = 29
+                    window = window + 2
+                    if window > 29:
+                        window = 29
                 
         DISPLAYSURF.blit(im_l_aff, (0, 0))
         if help:
@@ -265,7 +269,7 @@ if __name__ == "__main__":
         print_GUI(DISPLAYSURF, message, (lim_print_x, lim_print_y), font)
         message = "offset(o: reset) : (" + str(off_x) + ", " + str(off_y) + ")" 
         print_GUI(DISPLAYSURF, message, (lim_print_x, lim_print_y + 50), font)
-        message = "windows(w/x) : (" + str(windows) + ", " + str(windows) + ")" 
+        message = "window(w/x) : (" + str(window) + ", " + str(window) + ")" 
         print_GUI(DISPLAYSURF, message, (lim_print_x + 400, lim_print_y + 50), font)
         message = "type affichage(a) : " + type_affichage + \
                   "   seuil(t/y) : " + str(thresh)

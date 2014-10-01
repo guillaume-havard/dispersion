@@ -17,3 +17,7 @@ http://www.tyzx.com/PDFs/census.pdf
 *census amélioré*
 http://www.researchgate.net/publication/228458512_Local_stereo_matching_algorithm_Using_small-color_census_and_sparse_adaptive_support_weight
 https://siddhantahuja.wordpress.com/tag/stereo-matching/
+
+Pour les images
+---------------
+http://vision.middlebury.edu/stereo/code/code/imagedirs.zip
