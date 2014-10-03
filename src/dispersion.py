@@ -42,7 +42,7 @@ def hue_level(pix):
         #print("hue_level", err, exc_tb.tb_lineno)
         hls = (0, 0, 0)
     
-    return hls[0] * 255
+    return int(hls[0] * 255)
     
 def level_to_color(level, norm = 255, shiftp = 0.0, lum=0.5, sat=0.75):
     """
@@ -94,8 +94,8 @@ def image_to_levels(image, pix_level):
     for x in range(image.get_width()):
         levels.append([])        
         for y in range(image.get_height()):
-            levels[x].append(pix_level(pixels[x][y]))
-            
+            levels[x].append(pix_level(pixels[x][y]))            
+                           
     return levels
 
 
@@ -329,6 +329,12 @@ def histo_2D(levels):
                 hist[levels[x][y]] += 1
                 
     return hist
+"""
+histo = histo_2D(levels)
+    for key in iter(histo):
+        print("{} : {}".format(key, histo[key]))
+"""
+
 
 def histo_2D_int(levels):
     
