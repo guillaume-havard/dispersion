@@ -1,7 +1,7 @@
  #! /usr/bin/python3
 
 """
-blabla
+Affiche un histogramme d'une image.
 """
 from dispersion import *
 

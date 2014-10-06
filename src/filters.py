@@ -1,6 +1,8 @@
  #! /usr/bin/python3
 
 """
+Quelques filtres de flou.
+
 """
 
 from dispersion import *
@@ -10,7 +12,8 @@ import pygame
 
 def blur_average(levels, matrix):
     """
-    matrix = matrix size pour le moment
+    levels [in] : liste(liste(Int)) : image en niveau
+    matrix [in] : matrix size (pour le moment)
     """
     win = matrix//2
     
@@ -38,7 +41,8 @@ def blur_average(levels, matrix):
     
 def blur_median(levels, matrix):
     """
-    matrix = matrix size pour le moment
+    levels [in] : liste(liste(Int)) : image en niveau
+    matrix [in] : matrix size (pour le moment)
     """
     win = matrix//2
     

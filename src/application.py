@@ -1,7 +1,9 @@
  #! /usr/bin/python3
 
 """
-/!\ La taille des images est fixe (640, 480)
+Application de test d'algorithme de calculs de disparite stereoscopique.
+
+/!\ La taille des images est fixe (640, 480) pour la fenetre principale
 """
 import sys
 import pygame

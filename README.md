@@ -4,6 +4,8 @@ dispersion
 Test de génération d'image de profondeur à partir de deux images 
 stéréoscopiques
 
+*Utilise pygame*
+
 Méthodes testées
 ----------------
 * Comparaison simple

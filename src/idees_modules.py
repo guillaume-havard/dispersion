@@ -1,7 +1,12 @@
  #! /usr/bin/python3
 
 """
-Pas utilise pour le moment
+Pas utilisé pour le moment
+
+Tentative de structure générale pour les algos de stéreoscopie
+En effet, tous les algorithmes sont divisé en plusieurs étapes,
+un ou plusieurs filtrages sur les iamges de base puis une fonction de
+comparaison entre les deux images puis des filtrages sur l'image résulats.
 """
 
 def test_computation(image1, image2, offset, functions):
@@ -78,6 +83,7 @@ def filter_(image, pos, windows):
     return : Int
     """    
     pass
+    
 #def comparaison_(images, pos, windows): # ?? Comme ca toutes les func on les
 # memes arguments.
 def comparaison_(image1, image2, pos, windows):
@@ -88,9 +94,8 @@ def comparaison_(image1, image2, pos, windows):
     
     return : Int
     """
-    
-    
     pass
+    
 def color_(image, pos, maximum):
     """    
     image1 [in] :
@@ -100,11 +105,9 @@ def color_(image, pos, maximum):
     
     return : pygame.Color
     """
-    pass
-    
+    pass    
 
 # --- Test dispersion sur l'OE ---
-
 def filter_grey_level(image, pos, windows):
     """    
     image [in] :

@@ -1,7 +1,9 @@
  #! /usr/bin/python3
 
 """
-/!\ La taille des images est fixe (640, 480)
+Contient des fonctions pour les calculs de dispersion.
+
+Voir si je ne peux pas découper le fichier qui est un peu gros.
 """
 import sys
 import pygame
@@ -44,34 +46,38 @@ def hue_level(pix):
     
     return int(hls[0] * 255)
     
-def level_to_color(level, norm = 255, shiftp = 0.0, lum=0.5, sat=0.75):
+def level_to_color(level, norm = 255, shift = 0.0, lum=0.5, sat=0.75):
     """
     Convert a grey level to an rgb color. the conversion is cyclique so the 
     color for 255 is near the color for 0.
-    grey_level [in] : [0, 255]
+    level [in] : [0, 255]
+    norm [in] : [0, 255] Max possible level
+    shift [in] : [0.0, 1.0] proportion of values in [0, norm] that should not
+                 be taken into account
     lum [in] : [0.0, 1.0] luminance for the color
     sat [in] : [0.0, 1.0] saturation for the color
     
     return : pygame.Color
     """      
-    level_compressed = level * (1-shiftp)    
-    value = shiftp + level_compressed/norm
+    level_compressed = level * (1-shift)    
+    value = shift + level_compressed/norm
     
     c = colorsys.hls_to_rgb(value, lum, sat)    
     return (int(c[0]*255), int(c[1]*255), int(c[2]*255))
 
-def level_to_grey(level, norm = 255, shiftp = 0.0):
+def level_to_grey(level, norm = 255, shift = 0.0):
     """
     Convert a grey level to an rgb color. the conversion is cyclique so the 
     color for 255 is near the color for 0.
-    grey_level [in] : [0, 255]
-    lum [in] : [0.0, 1.0] luminance for the color
-    sat [in] : [0.0, 1.0] saturation for the color
+    level [in] : [0, 255]
+    norm [in] : [0, 255] Max possible level
+    shift [in] : [0.0, 1.0] proportion of values in [0, norm] that should not
+                 be taken into account (not to useful for grey)
     
     return : pygame.Color
     """      
-    level_compressed = level * (1-shiftp)    
-    value = shiftp + level_compressed/norm
+    level_compressed = level * (1-shift)    
+    value = shift + level_compressed/norm
         
     return (int(value*255), int(value*255), int(value*255))
 
@@ -81,10 +87,10 @@ def image_to_levels(image, pix_level):
     Will convert an image to a 2D list of level computed by an input function.
     
     image [in]: pygame.Surface
-    pix_level: function taking a pixelArray (3 bytes) and compute a [0, 255]
-               level
+    pix_level [in] : function taking a pixelArray (3 bytes) and compute a 
+                     [0, 255] level
                
-    return: 2D list (same size than the image) with levelfor each "pixel".
+    return: 2D list (same size than the image) with level for each "pixel".
     """    
     #test pour l'image
     
@@ -101,6 +107,13 @@ def image_to_levels(image, pix_level):
 
 def levels_to_image(levels, level_to_pix):
     """
+    Will convert a 2D list of level to an image computed by an input function.
+    
+    image [in] : 2D list
+    level_to_pix [in] : function taking a [0, 255] level and compute a 
+                     pixelArray (3 bytes)
+               
+    return: pygame.Surface (same size than the list)
     """
     maximum = 0
     for level in levels:        
@@ -153,7 +166,9 @@ def compute_dispersion_level(im_l, im_r, offset, threshold, pix_level):
     im_r [in] : pygame.Surface right image
     offset [in] : set with x and y offset for dispersion computation
     threshold [in] : threshold to determine the difference allowed for a match
-
+    pix_level [in] : function taking a pixelArray (3 bytes) and compute a 
+                     [0, 255] level
+                     
     return : pygame.Surface dispersion image  
     """
     if (im_l.get_width() != im_r.get_width()) or\
@@ -193,7 +208,12 @@ def compute_dispersion_level(im_l, im_r, offset, threshold, pix_level):
 
 def dispertion_rank(levels, window):
     """
-      
+    Will compute the rank of each pixel with thier neighboor pixels
+    
+    levels [in] : list(list(int [0, 255]))
+    window [in] : Int (size of the square window)
+    
+    return : list(list(int [0, 255])) 
     """    
     rank = []    
     # filtre sur le rang.
@@ -220,8 +240,15 @@ def dispertion_rank(levels, window):
                     
 def SAD(levels1, levels2, window, disp_range, offset):
     """
+    Will compute a disparity image from two level image.
     
-    return levels
+    levels1 [in] : list(list(int [0, 255])) left picture
+    levels1 [in] : list(list(int [0, 255])) right picture
+    window [in] : Int (size of the square window)
+    disp_range [in] : set with min and max disparity
+    offset [in] : set with x and y offset for dispersion computation
+    
+    return : list(list(int [disp_range]))     
     """
     #tests listes de memes tailles
     hist = {}
@@ -265,62 +292,21 @@ def SAD(levels1, levels2, window, disp_range, offset):
             lvl_res[x][y] = best_disp
                
     return lvl_res
-    
-def SAD2(levels1, levels2, window, disp_range, offset):
-    """
-    Je n'ai pas les resultats escomptes avec SAD pour le moment.
-    2nd tentative, pas d'offset pour le moment.
-
-    arg :
-    list de list d'int * 2
-    int
-    set de deux int
-    nimporte quoi
-    
-    retourne : list de list d'int
-    """
-    # va parcourir les pixel d'une image(1) et essayer de trouver les pixels 
-    # correspondant sur l'autre image(2) avec un decalage de disp_range
-    # comparaison du voisinage des pixel avec une matrice de carree de taille
-    # window
-    
-    # fenetre de meme taille ?
-    
-    win = window // 2
-    res = []
-    for x in range(len(levels1)):
-        res.append([])        
-        for y in range(len(levels1[0])):
-            res[x].append(0)
-            
-            if not win <= x < len(levels1) - win:
-                continue
-            if not win <= y < len(levels1[0]) - win:
-                continue
-            
-            best_disp = 0
-            min_somme = 65532
-            for d in range(disp_range[0], disp_range[1] + 1):
-                if x-win-d < 0:
-                    continue
-                somme = 0
-                for i in range(-win, win+1):
-                    for j in range(-win, win+1):
-                        somme += abs(levels1[x+i][y+j] - 
-                                     levels2[x+i-d][y+j])
-                    
-                if somme <= min_somme:
-                    min_somme = somme
-                    best_disp = d
-                    
-            res[x][y] = best_disp
-            
-    return res
 
 def histo_2D(levels):
+    """
+    Generate an histogram from a level image
+    
+    levels [in] : list(list(int [0, 255]))
+    
+    return : Dict {level : number of pixel of this level}
+    
+    histo = histo_2D(levels)
+    for key in iter(histo):
+        print("{} : {}".format(key, histo[key]))
+    """
     
     hist = {}
-
     for x in range(len(levels)):
         for y in range(len(levels[0])):
             if levels[x][y] not in hist:
@@ -329,15 +315,19 @@ def histo_2D(levels):
                 hist[levels[x][y]] += 1
                 
     return hist
-"""
-histo = histo_2D(levels)
-    for key in iter(histo):
-        print("{} : {}".format(key, histo[key]))
-"""
-
 
 def histo_2D_int(levels):
+    """
+    Generate an histogram from a level image
     
+    levels [in] : list(list(int [0, 255]))
+    
+    return : Dict {int(level) : number of pixel of this level}
+    
+    histo = histo_2D_int(levels)
+    for key in iter(histo):
+        print("{} : {}".format(key, histo[key]))
+    """
     hist = {}
 
     for x in range(len(levels)):
@@ -352,15 +342,12 @@ def histo_2D_int(levels):
 
 def dispertion_census(levels, window):
     """
-    Compute the dispertion image of two images. The image can be shift by
-    an offset.
+    Will compute a census of each pixel with their neighboor pixels
     
-    im_l [in] : pygame.Surface left image
-    im_r [in] : pygame.Surface right image
-    offset [in] : set with x and y offset for dispersion computation
-    window [in] : window for the computation
-
-    return : image de rank #pygame.Surface dispersion image  
+    levels [in] : list(list(int [0, 255]))
+    window [in] : Int (size of the square window)
+    
+    return : list(list(list(int [0, 255])))
     """    
     rank = []    
     # filtre sur le rang.
@@ -389,9 +376,15 @@ def dispertion_census(levels, window):
 
 def hamming_distance(levels1, levels2, disp_range, offset):
     """
-    sans window
+    Will compute a disparity image from hamming distance of
+    two census level image.
     
-    return levels
+    levels1 [in] : list(list(list(int [0, 255]))) left picture
+    levels1 [in] : list(list(list(int [0, 255]))) right picture
+    disp_range [in] : set with min and max disparity
+    offset [in] : set with x and y offset for dispersion computation
+    
+    return : list(list(int [disp_range]))    
     """
     #tests listes de memes tailles
         
@@ -431,9 +424,13 @@ def hamming_distance(levels1, levels2, disp_range, offset):
     return lvl_res
                         
 
-def echelle(shift_p):
+def scale(shift):
     """
+    Generate a scale
     taille 200*20
+    
+    shift [in] : Float[0.0, 1.0] portion that will not be used
+    
     """    
     width = 200
     height = 20
@@ -443,7 +440,7 @@ def echelle(shift_p):
     
     for x in range(width):
         for y in range(height):
-            pix_echelle[x][y] = level_to_color(x, width, shift_p)
+            pix_echelle[x][y] = level_to_color(x, width, shift)
     
     del pix_echelle
     
@@ -451,7 +448,8 @@ def echelle(shift_p):
 
 def print_GUI(surface, msg, top_left, font):
     """
-    Print a black message in a surface
+    Print a black text message in a surface
+    
     surface [in] : pygame.Surface surface where the message will be blit
     msg [in] : text to print
     top_left [in] : left top position to print the message
@@ -467,6 +465,7 @@ def mask_image(image, mask):
     Mask an image with an other image. The resulting image will be a copy
     of the inputed one for non black (0, 0, 0) pixels of the mask.
     The two images must have the same size.
+    
     surface [in] : pygame.Surface image we want to mask
     mask [in] : pygame.Surface mask all black (0, 0, 0) pixel will mask the
     image
@@ -494,6 +493,7 @@ def mask_image(image, mask):
     del pix_res 
     
     return im_res
+
 
 
 
