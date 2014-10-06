@@ -18,7 +18,7 @@ def algo_SAD(im_l, im_r, pix_level, offset, window):
     levels_r = image_to_levels(im_r, pix_level)
     print("ok")
     print("SAD...", end="")
-    sad = SAD(levels_l, levels_r, window, (0, 16), offset)    
+    sad = SAD(levels_l, levels_r, window, (0, 25), offset)    
     print("ok") 
     print("generation image...", end="")
     im_result = levels_to_image(sad, level_to_color)
@@ -106,10 +106,10 @@ if __name__ == "__main__":
     #im_r = pygame.image.load('im6.ppm')
     #im_l = pygame.image.load('l_150.bmp')
     #im_r = pygame.image.load('r_150.bmp')
-    im_l = pygame.image.load('im2-med15.bmp')
-    im_r = pygame.image.load('im6-med15.bmp')
-    im_l_OE = pygame.image.load('l_150_OE.bmp')
-    im_r_OE = pygame.image.load('r_150_OE.bmp')    
+    im_l = pygame.image.load('l.bmp')
+    im_r = pygame.image.load('r.bmp')
+    im_l_OE = pygame.image.load('l_OE.bmp')
+    im_r_OE = pygame.image.load('r_OE.bmp')    
     
     type_algorithme = "none"
     type_affichage = "hue"
@@ -219,6 +219,8 @@ if __name__ == "__main__":
                     message += str(off_x) + "-" + str(off_y) + ".bmp"
                     
                     pygame.image.save(im_result, message)  
+                    
+                    print("Sauvegarde", message)
                     #pygame.image.save(im_echelle, "echelle.bmp")
                     
                 # Threshold difference
