@@ -79,8 +79,8 @@ def algo_census_hamming(im_l, im_r, pix_level, offset, window):
 if __name__ == "__main__":     
     marge_x = 180 # max offset between the two pictures on the x axis
     marge_y = 30 # max offset between the two pictures on the y axis
-    off_x = 0 # offset between the two pictures
-    off_y = 0 # offset between the two pictures
+    off_x = 147 # offset between the two pictures
+    off_y = -5 # offset between the two pictures
     thresh = 30  # max difference value to consider value alike.
     help = False # is the help activated ?
     window = 3 # window used with some algorithms
@@ -110,8 +110,10 @@ if __name__ == "__main__":
     #im_r = pygame.image.load('r_150.bmp')
     im_l = pygame.image.load('l.bmp')
     im_r = pygame.image.load('r.bmp')
-    im_l_OE = pygame.image.load('l_OE.bmp')
-    im_r_OE = pygame.image.load('r_OE.bmp')    
+    #im_l_OE = pygame.image.load('l_OE.bmp')
+    #im_r_OE = pygame.image.load('r_OE.bmp') 
+    im_l_OE = pygame.image.load('l_pingouin_-horiz_40.bmp')
+    im_r_OE = pygame.image.load('r_pingouin_-horiz_40.bmp')
     
     type_algorithme = "none"
     type_affichage = "hue"

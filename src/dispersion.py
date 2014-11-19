@@ -105,22 +105,27 @@ def image_to_levels(image, pix_level):
     return levels
 
 
-def levels_to_image(levels, level_to_pix):
+def levels_to_image(levels, level_to_pix, norm=255, shift=0.0):
     """
     Will convert a 2D list of level to an image computed by an input function.
     
     image [in] : 2D list
     level_to_pix [in] : function taking a [0, 255] level and compute a 
                      pixelArray (3 bytes)
+                     
+    norm [in] : [0, 255] Max possible level
+    shift [in] : [0.0, 1.0] proportion of values in [0, norm] that should not
+                 be taken into account (not to useful for grey)
                
     return: pygame.Surface (same size than the list)
     """
-    maximum = 0
-    for level in levels:        
-        if maximum < max(level):
-            maximum = max(level)    
+    if norm == 0:
+        norm = 0
+        for level in levels:        
+            if norm < max(level):
+                norm = max(level)    
             
-    print("maximum pour normalisation :", maximum)
+    print("maximum pour normalisation :", norm)
     
     im_res = pygame.Surface((len(levels), len(levels[0])))
     im_res.fill((0, 0, 0))
@@ -130,7 +135,7 @@ def levels_to_image(levels, level_to_pix):
     for x in range(im_res.get_width()):
         for y in range(im_res.get_height()):
             if levels[x][y] != 0:
-                pix_res[x][y] = level_to_pix(levels[x][y], maximum, 0.35)
+                pix_res[x][y] = level_to_pix(levels[x][y], norm, shift)
     
     del pix_res
     
@@ -198,7 +203,7 @@ def compute_dispersion_level(im_l, im_r, offset, threshold, pix_level):
                 p_r = pix_level(r)
                 if abs(p_l - p_r) < threshold:                    
                     pix_disp[x][y] = level_to_color((p_l + p_r) / 2)
-                    
+                                    
     del pix_l
     del pix_r
     del pix_disp
